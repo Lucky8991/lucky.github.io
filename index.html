@@ -26,9 +26,9 @@
                 }
     
                 let result = data.data;
-                let high = result["f44"];
-                let low = result["f45"];
-                let close = result["f43"];
+                let high = result["f44"] / 100;
+                let low = result["f45"] / 100;
+                let close = result["f43"] / 100;
                 let name = result["f58"];
     
                 document.getElementById("high").value = high;
