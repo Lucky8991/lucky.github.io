@@ -1,237 +1,138 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>支撑阻力位计算器</title>
-    <script>
-        async function fetchStockData() {
-            let stockCode = document.getElementById("stockCode").value.trim();
-            if (!stockCode) {
-                alert("请输入股票代码！");
-                return;
-            }
-    
-            try {
-                // 判断股票代码是沪市（6开头）还是深市（0或3开头）
-                let prefix = stockCode.startsWith("6") ? "1" : "0"; // 沪市: 1, 深市: 0
-                // 拼接成东方财富 API 所需的格式
-                let eastmoneyStockCode = `${prefix}.${stockCode}`;
-                let response = await fetch(`https://push2.eastmoney.com/api/qt/stock/get?secid=${eastmoneyStockCode}`);
-                let data = await response.json();
-    
-                if (!data || !data.data) {
-                    alert("获取数据失败，请检查股票代码！");
-                    return;
-                }
-    
-                let result = data.data;
-                let high = result["f44"] / 100;
-                let low = result["f45"] / 100;
-                let close = result["f43"] / 100;
-                let name = result["f58"];
-    
-                document.getElementById("high").value = high;
-                document.getElementById("low").value = low;
-                document.getElementById("close").value = close;
-                document.getElementById("name").value = name;
-    
-            } catch (error) {
-                alert("获取股票数据失败！");
-                console.error(error);
-            }
-        }
-        function calculate() {
-            let name = document.getElementById("name").value.trim();
-            let high = parseFloat(document.getElementById("high").value);
-            let low = parseFloat(document.getElementById("low").value);
-            let close = parseFloat(document.getElementById("close").value);
-            
-            if (isNaN(high) || isNaN(low) || isNaN(close)) {
-                alert("请输入有效的数值！");
-                return;
-            }
-            
-            let pivot = (high + low + close) / 3;
-            let levels = {
-                r1: 2 * pivot - low,
-                r2: pivot + (high - low),
-                r3: high + 2 * (pivot - low),
-                s1: 2 * pivot - high,
-                s2: pivot - (high - low),
-                s3: low - 2 * (high - pivot),
-            };
-            
-            function calculatePercentage(value) {
-                let percent = ((value - close) / close) * 100;
-                if (percent > 10) {
-                    value = close * 1.1;
-                    percent = 10;
-                } else if (percent < -10) {
-                    value = close * 0.9;
-                    percent = -10;
-                }
-                return { value: value.toFixed(2), percent: percent.toFixed(2) + "%" };
-            }
-            
-            Object.keys(levels).forEach(key => {
-                let result = calculatePercentage(levels[key]);
-                document.getElementById(key).innerText = result.value;
-                document.getElementById(key + "-percent").innerText = result.percent;
-            });
-            
-            document.getElementById("p").innerText = pivot.toFixed(2);
-            document.getElementById("p-percent").innerText = calculatePercentage(pivot).percent;
-            
-            let resultTitle = document.getElementById("result-title");
-            resultTitle.innerText = name || "计算结果：";
-            
-            let greenColor = "#50fa7b";
-            let defaultColor = "#f778ba";
-            
-            ["s1", "s2", "s3"].forEach(id => {
-                document.getElementById(id).style.color = greenColor;
-                document.getElementById(id + "-percent").style.color = greenColor;
-            });
-
-            ["r1", "r2", "r3"].forEach(id => {
-                document.getElementById(id).style.color = defaultColor;
-                document.getElementById(id + "-percent").style.color = defaultColor;
-            });
-            
-            let pivotElement = document.getElementById("p");
-            let percentElement = document.getElementById("p-percent");
-            if (pivot < close) {
-                pivotElement.style.color = greenColor;
-                percentElement.style.color = greenColor;
-            } else {
-                pivotElement.style.color = defaultColor;
-                percentElement.style.color = defaultColor;
-            }
-        }
-
-        function exportToExcel() {
-            let data = [["名称", "最高价", "最低价", "收盘价", "R3", "R2", "R1", "P", "S1", "S2", "S3"],
-                [
-                    document.getElementById("name").value,
-                    document.getElementById("high").value,
-                    document.getElementById("low").value,
-                    document.getElementById("close").value,
-                    document.getElementById("r3").innerText,
-                    document.getElementById("r2").innerText,
-                    document.getElementById("r1").innerText,
-                    document.getElementById("p").innerText,
-                    document.getElementById("s1").innerText,
-                    document.getElementById("s2").innerText,
-                    document.getElementById("s3").innerText
-                ]
-            ];
-            let ws = XLSX.utils.aoa_to_sheet(data);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "支撑阻力位");
-            XLSX.writeFile(wb, "pivot_points.xlsx");
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>终极疯狂星期四谜题</title>
     <style>
         body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            font-family: '微软雅黑', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
             text-align: center;
+            perspective: 1000px;
+        }
+
+        .text-box {
+            background: rgba(255,215,0,0.3);
             padding: 20px;
-        }
-        .container {
-            border: 2px solid #58a6ff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px #58a6ff;
-            display: inline-block;
-            text-align: center;
-        }
-        .input-section, .results {
-            border: 2px solid #58a6ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px auto;
-            width: 90%;
-            max-width: 400px;
-        }
-        h2 {
-            color: #58a6ff;
-        }
-        label {
-            display: block;
-            margin: 10px 0;
-            font-size: 18px;
-        }
-        input {
-            background: #161b22;
-            border: 1px solid #58a6ff;
-            padding: 10px;
-            color: #c9d1d9;
-            border-radius: 5px;
-            font-size: 16px;
-            width: 160px;
-        }
-        input:focus {
-            border-color: #f778ba;
-            outline: none;
-            box-shadow: 0 0 10px #f778ba;
-        }
-        button {
-            background: linear-gradient(45deg, #58a6ff, #f778ba);
-            border: none;
-            padding: 10px 20px;
-            color: white;
-            font-size: 16px;
+            border-radius: 15px;
+            margin: 20px;
+            transform-style: preserve-3d;
             cursor: pointer;
-            border-radius: 5px;
-            margin: 10px;
-            transition: 0.3s;
+            transition: 1s;
         }
-        button:hover {
-            box-shadow: 0 0 15px #58a6ff;
+
+        .secret {
+            font-size: 0;
+            color: transparent;
+            text-shadow: 0 0 10px #fff;
+            transition: 1s;
         }
-        .results {
-            font-size: 18px;
-            background: #161b22;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #58a6ff;
-            width: 90%;
-            max-width: 400px;
+
+        .rainbow {
+            animation: rainbow 2s infinite, rotate 5s linear infinite;
         }
-        .result-value {
-            font-size: 22px;
-            font-weight: bold;
-            color: #f778ba;
+
+        #final-image {
+            position: fixed;
+            top: -1000px;
+            width: 300px;
+            transition: 3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            filter: drop-shadow(0 0 20px #ff0000);
+        }
+
+        @keyframes rainbow {
+            0% { color: red; }
+            20% { color: orange; }
+            40% { color: yellow; }
+            60% { color: green; }
+            80% { color: blue; }
+            100% { color: purple; }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .matrix-code {
+            position: fixed;
+            font-family: monospace;
+            color: #0f0;
+            opacity: 0.3;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>支撑阻力位计算器</h2>
-        <div class="input-section">
-            <label>股名称: <input type="text" id="name"></label>
-            <label>最高价: <input type="number" id="high" step="0.01"></label>
-            <label>最低价: <input type="number" id="low" step="0.01"></label>
-            <label>收盘价: <input type="number" id="close" step="0.01"></label>
-            <label>股代码: <input type="text" id="stockCode"></label>
-            <button onclick="fetchStockData()">获取数据</button>
-            <button onclick="calculate()">计算</button>
-<!--             <button onclick="exportToExcel()">导出Excel</button> -->
+    <div id="container">
+        <div class="text-box" onclick="startAwakening()">
+            <h1>警告：机密文件 - 安全等级5A</h1>
+            <p>侦测到<span class="secret">肯德基</span>异常协议</p>
+            <p>第<span class="secret">星期四</span>协议即将激活</p>
+            <p>倒计时<span class="secret">VME50</span>启动...</p>
+            <p style="font-size:8px">（点击解密真相）</p>
         </div>
-        <div class="results">
-            <h3 id="result-title">计算结果：</h3>
-            <p>R3: <span id="r3" class="result-value"></span> (<span id="r3-percent" class="result-percent"></span>)</p>
-            <p>R2: <span id="r2" class="result-value"></span> (<span id="r2-percent" class="result-percent"></span>)</p>
-            <p>R1: <span id="r1" class="result-value"></span> (<span id="r1-percent" class="result-percent"></span>)</p>
-            <p>P : <span id="p" class="result-value"></span> (<span id="p-percent" class="result-percent"></span>)</p>
-            <p>S1: <span id="s1" class="result-value"></span> (<span id="s1-percent" class="result-percent"></span>)</p>
-            <p>S2: <span id="s2" class="result-value"></span> (<span id="s2-percent" class="result-percent"></span>)</p>
-            <p>S3: <span id="s3" class="result-value"></span> (<span id="s3-percent" class="result-percent"></span>)</p>
-        </div>
+
+        <div id="final-image" src="https://example.com/kfc-thursday.jpg"></div>
     </div>
+
+    <script>
+        function startAwakening() {
+            // 第一阶段解密
+            document.querySelectorAll('.secret').forEach(el => {
+                el.style.fontSize = '24px';
+                el.style.color = '#fff';
+            });
+
+            // 启动特效
+            setTimeout(() => {
+                document.body.innerHTML += `
+                    <div class="matrix-code" style="left:${Math.random()*100}%;top:${Math.random()*100}%}">VME50</div>
+                `;
+            }, 1000);
+
+            // 最终觉醒
+            setTimeout(() => {
+                const img = document.getElementById('final-image');
+                img.style.top = '50%';
+                img.style.transform = 'translateY(-50%) scale(2)';
+                img.src = 'https://n.sinaimg.cn/sinakd20231213s/600/w1080h1120/20231213/5d63-3c2a3f1c6d1d5d3e5b8b3a0e5d5c5b5c.jpg'; // 替换为实际图片地址
+                
+                // 创建爆炸特效
+                const explosion = document.createElement('div');
+                explosion.style.cssText = `
+                    position: fixed;
+                    width: 100vw;
+                    height: 100vh;
+                    background: radial-gradient(circle, #ff0000 0%, transparent 70%);
+                    animation: boom 1s forwards;
+                `;
+                document.body.appendChild(explosion);
+            }, 3000);
+        }
+
+        // 创建矩阵数字雨
+        setInterval(() => {
+            const code = document.createElement('div');
+            code.className = 'matrix-code';
+            code.style.left = Math.random()*100 + '%';
+            code.style.animation = `fall ${Math.random()*3+2}s linear`;
+            code.textContent = Math.random().toString(36).substr(2,5);
+            document.body.appendChild(code);
+            
+            setTimeout(() => code.remove(), 5000);
+        }, 100);
+    </script>
 </body>
 </html>
