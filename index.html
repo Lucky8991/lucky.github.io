@@ -1108,6 +1108,7 @@
     // 事件监听
     startBtn.addEventListener('click', startQuiz);
     startBtn.addEventListener('touchstart', (e) => {
+        console.log("点击事件--开始");
         e.preventDefault();
         startQuiz();
     });
